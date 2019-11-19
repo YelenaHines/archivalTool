@@ -1,0 +1,11 @@
+[ROOT]
+root = \\amowirrfpspd01\Archive01\LIMS_TCR1
+
+[SOURCE]
+source = Endpoint
+
+[LOGGING]
+log_file = \\finch\AEAS\Teams\Seed & Sample Mgmt\TCR Team\Endpoint Archival Application\logging_info.log
+
+[INTERVAL]
+sleep_interval = 0
