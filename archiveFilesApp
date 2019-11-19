@@ -1,0 +1,73 @@
+import shutil
+import os
+from os import path
+import datetime, time
+import configparser
+import logging
+
+
+def get_date_modified(filename):
+    ''' This function takes a specific file and returns its date modified
+    attribute in a MM YYYY format '''
+
+    t = datetime.date.fromtimestamp(path.getmtime('{}'.format(filename)))
+    strip = datetime.datetime.strptime(str(t), '%Y-%m-%d')
+
+    return strip.strftime('%m_%b %Y')
+
+def getYear(str_object):
+    '''str_object is a date format yyyy-mm-dd'''
+    
+    yyyy = str_object.split('-')
+    return yyyy[0]
+
+
+def move_files():
+    ''' This function moves files from a source to a destination path'''
+    
+    config = configparser.ConfigParser()
+    config.read('config_settings.ini')
+    
+    log_filename = config['LOGGING']['log_file']
+    logging.basicConfig(level=logging.DEBUG, filename=log_filename, format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    root = config['ROOT']['root']
+    source_file = config['SOURCE']['source']
+    
+    source_path = path.join(root, source_file)
+    
+    files_moved_count = 0
+    files_in_dir = 0
+    
+    for name in os.listdir(source_path):
+        file = path.join(source_path, name)
+        x = datetime.date.fromtimestamp(path.getmtime(file))
+        if x == datetime.date.today():
+            continue
+        ago_raw = str(datetime.date.today() - x)
+        ago_list = ago_raw.split(' ')
+        ago_str_int = int(ago_list[0])
+        files_in_dir += 1
+
+        
+        if ago_str_int > 15:
+            date_modified = get_date_modified(file)
+            current_year = getYear(str(x))
+            destination = path.join(root, current_year, date_modified)
+            shutil.move(file, destination)
+            files_moved_count += 1
+            
+    logging.info(f'{files_moved_count} out of {files_in_dir} files successfully moved')
+    
+    sleep_interval = config['INTERVAL']['sleep_interval']
+    
+    return int(sleep_interval)
+
+            
+
+if __name__ == '__main__':
+    while True:
+        time_sleep = move_files()
+        if time_sleep == 0:
+            break
+        time.sleep(time_sleep)
